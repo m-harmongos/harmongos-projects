@@ -20,7 +20,7 @@ export default struct RefreshComponent {
   private onStateChange() {
     switch (this.state) {
       case RefreshState.REFRESHING:
-        if (!this.onRefresh) {
+        if (this.onRefresh) {
           this.onRefresh();
         }
         break;
@@ -50,7 +50,7 @@ export default struct RefreshComponent {
           } else if (this.headerStyle === RefreshHeaderStyle.CLOUD) {
             RefreshAnimHeader().height(RefreshConstants.REFRESH_HEADER_HEIGHT)
           }
-          if (!this.itemLayout) {
+          if (this.itemLayout) {
             this.itemLayout()
           }
         }
@@ -58,5 +58,46 @@ export default struct RefreshComponent {
         .height(Number(this.displayHeight) + RefreshConstants.REFRESH_LAYOUT_EXTRA_HEIGHT)
       }
     }
+    .edgeEffect(EdgeEffect.Spring)
+    .width('100%')
+    .height(this.displayHeight)
+    .listDirection(Axis.Vertical)
+    .offset({ y: this.headerOffset })
+    .animation({
+      curve: Curve.Smooth,
+      duration: RefreshConstants.REFRESH_HEADER_ANIM_DURATION,
+      playMode: PlayMode.Normal,
+      onFinish: () => {
+        if (this.headerOffset === -RefreshConstants.REFRESH_HEADER_HEIGHT) {
+          this.state = RefreshState.IDLE;
+        }
+      }
+    })
+    .onTouch((event?: TouchEvent) => {
+      if (!event) {
+        return;
+      }
+      switch (event.type) {
+        case TouchType.Down:
+          if (this.state === RefreshState.IDLE) {
+            this.state = RefreshState.DRAGGING;
+          }
+          break;
+        case TouchType.Move:
+          if (this.state === RefreshState.DRAGGING
+          && this.listController.currentOffset().yOffset <= -RefreshConstants.REFRESH_EFFECTIVE_HEIGHT) {
+            this.state = RefreshState.DRAGGING_REFRESHABLE;
+          }
+          break;
+        case TouchType.Up:
+          if (this.state === RefreshState.DRAGGING_REFRESHABLE) {
+            this.headerOffset = 0;
+            this.state = RefreshState.REFRESHING;
+          }
+          break;
+        default:
+          break;
+      }
+    })
   }
 }
