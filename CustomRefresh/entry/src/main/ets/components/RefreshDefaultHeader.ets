@@ -3,7 +3,7 @@ import { RefreshConstants, RefreshHeaderConstants, RefreshState } from './Refres
 
 @Component
 export default struct RefreshDefaultHeader {
-  @State refreshTitle: Resource|string = 'Pull Down Refresh'
+  @State refreshTitle: string = 'Pull Down Refresh'
   @Consume(RefreshConstants.REFRESH_STATE_TAG) @Watch('onStateCheck') state: number;
 
   private onStateCheck() {
